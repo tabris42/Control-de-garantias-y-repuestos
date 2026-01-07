@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Garantías - Impresión Optimizada</title>
+    <style>
+        /* ESTILOS VISUALES (PANTALLA) */
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; margin: 20px; color: #333; }
+        .container { max-width: 1150px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: #1e3a8a; text-align: center; margin-bottom: 25px; }
+        
+        .form-container { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 25px; }
+        .form-row-top { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .form-row-bottom { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; align-items: end; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
+        input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: white; }
+        
+        .search-group input { background-color: #fff9db; border: 1px solid #fab005; font-weight: bold; }
+        .series-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #edf2f7; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        
+        .button-group { display: flex; flex-direction: column; gap: 10px; }
+        button { cursor: pointer; border: none; border-radius: 6px; font-weight: bold; transition: 0.2s; padding: 12px; }
+        .btn-add { background-color: #2563eb; color: white; width: 100%; font-size: 1rem; }
+        .btn-print { background-color: #334155; color: white; } /* Botón de imprimir */
+        .btn-excel { background-color: #166534; color: white; }
+        .btn-import { background-color: #64748b; color: white; }
+
+        .maquina-block { border: 1px solid #e2e8f0; border-radius: 10px; margin-top: 20px; overflow: hidden; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .maquina-header { background: #334155; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .maquina-info { font-size: 0.9rem; }
+        .maquina-info span { color: #cbd5e1; margin-left: 15px; font-size: 0.8rem; }
+
+        .repuestos-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .repuestos-table th { background: #f1f5f9; color: #475569; padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        .repuestos-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+
+        .status-badge { padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; }
+        .pend { background: #fef3c7; color: #92400e; }
+        .inst { background: #dcfce7; color: #166534; }
+        
+        .action-btns { display: flex; gap: 5px; }
+        .btn-sm { padding: 5px 8px; font-size: 0.7rem; border-radius: 4px; }
+        .btn-edit { background: #dbeafe; color: #1e40af; }
+        .btn-delete { background: #fee2e2; color: #991b1b; }
+        .btn-alerta { background: #f59e0b; color: white; }
+
+        /* ==========================================
+           ESTILOS EXCLUSIVOS PARA IMPRESIÓN 
+           ========================================== */
+        @media print {
+            /* Ocultar todo lo que no sea la lista de bloques */
+            body { background-color: white; margin: 0; padding: 0; }
+            .container { box-shadow: none; max-width: 100%; width: 100%; margin: 0; padding: 0; }
+            .form-container, .button-group, h2, .action-btns, .btn-alerta, .search-group {
+                display: none !important;
+            }
+            
+            /* Ajustar los bloques de máquina */
+            .maquina-block { 
+                border: 1px solid #333; 
+                page-break-inside: avoid; /* Evita que un bloque se corte entre dos páginas */
+                margin-top: 10px;
+                box-shadow: none;
+            }
+            .maquina-header { 
+                background-color: #eee !important; 
+                color: black !important; 
+                border-bottom: 1px solid #333;
+            }
+            .maquina-info span { color: #333 !important; }
+            
+            .repuestos-table th { background-color: #f5f5f5 !important; color: black !important; border-bottom: 1px solid #333; }
+            .status-badge { border: 1px solid #333; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Control de Garantías y Repuestos</h2>
+    
+    <div class="form-container">
+        <div class="form-row-top">
+            <input type="hidden" id="editandoId" value="">
+            <div class="form-group"><label>Marca</label><input type="text" id="marca"></div>
+            <div class="form-group"><label>Modelo</label><input type="text" id="modelo"></div>
+            <div class="form-group"><label>S/N Equipo</label><input type="text" id="snEquipo"></div>
+            <div class="form-group"><label>Repuesto</label><input type="text" id="repuesto"></div>
+            <div class="form-group" id="grupoCantidad"><label>Cantidad</label><input type="number" id="cantidad" value="1" min="1" onchange="generarInputsSerie()"></div>
+        </div>
+
+        <div class="form-row-bottom">
+            <div class="form-group"><label>Fecha de Petición</label><input type="date" id="fechaPeticion"></div>
+            <div class="form-group"><label>Fecha de Instalación</label><input type="date" id="fechaInstalacion"></div>
+            <div class="form-group search-group">
+                <label>🔍 Buscar por S/N Equipo</label>
+                <input type="text" id="inputBusqueda" placeholder="Filtrar por serie..." onkeyup="renderizarTabla()">
+            </div>
+        </div>
+        
+        <div id="contenedorSeries" class="series-container"></div>
+        
+        <div class="button-group">
+            <button id="btnGuardar" class="btn-add" onclick="procesarFormulario()">💾 Guardar Registro</button>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                <button class="btn-print" onclick="window.print()">🖨️ Imprimir Listado</button>
+                <button class="btn-excel" onclick="exportarExcel()">📊 Exportar a Excel</button>
+                <button class="btn-import" onclick="document.getElementById('fileInput').click()">📂 Importar Backup</button>
+            </div>
+            <input type="file" id="fileInput" accept=".csv" style="display:none" onchange="importarExcel(event)">
+        </div>
+    </div>
+
+    <div id="listaBloques"></div>
+</div>
+
+<script>
+    let registros = JSON.parse(localStorage.getItem('garantias_vFinal_FullNames')) || [];
+
+    function formatearFechaLatina(fechaStr) {
+        if(!fechaStr || fechaStr === "---" || fechaStr === "") return "---";
+        if(fechaStr.includes("/")) return fechaStr;
+        const partes = fechaStr.split("-");
+        if(partes.length !== 3) return fechaStr;
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    function generarInputsSerie() {
+        const cant = document.getElementById('cantidad').value;
+        const contenedor = document.getElementById('contenedorSeries');
+        contenedor.innerHTML = '';
+        if(cant < 1) return;
+        for(let i = 1; i <= cant; i++) {
+            contenedor.innerHTML += `
+                <div class="form-group"><label>S/N MALO #${i}</label><input type="text" class="sn-malo-input"></div>
+                <div class="form-group"><label>S/N NUEVO #${i}</label><input type="text" class="sn-nuevo-input"></div>`;
+        }
+    }
+
+    function renderizarTabla() {
+        const contenedor = document.getElementById('listaBloques');
+        const busqueda = document.getElementById('inputBusqueda').value.toLowerCase();
+        contenedor.innerHTML = '';
+        const grupos = {};
+        let hayResultados = false;
+        
+        registros.forEach(r => {
+            if (busqueda && !r.snEquipo.toLowerCase().includes(busqueda)) return;
+            hayResultados = true;
+            const llave = `${r.snEquipo}_${r.fechaPeticion}`;
+            if (!grupos[llave]) grupos[llave] = [];
+            grupos[llave].push(r);
+        });
+
+        const llavesOrdenadas = Object.keys(grupos).sort((a, b) => b.split('_')[1].localeCompare(a.split('_')[1]));
+
+        llavesOrdenadas.forEach(llave => {
+            const items = grupos[llave];
+            const cab = items[0];
+            const tienePendientes = items.some(i => !i.fechaInstalacion || i.fechaInstalacion === "---");
+            
+            let htmlBloque = `
+                <div class="maquina-block">
+                    <div class="maquina-header">
+                        <div class="maquina-info">
+                            <strong>${cab.marca} ${cab.modelo}</strong>
+                            <span>S/N EQUIPO: ${cab.snEquipo}</span>
+                            <span>📅 PETICIÓN: ${formatearFechaLatina(cab.fechaPeticion)}</span>
+                        </div>
+                        ${tienePendientes ? `<button class="btn-sm btn-alerta" onclick="crearRecordatorio('${llave}')">🔔 Activar Alerta</button>` : ''}
+                    </div>
+                    <table class="repuestos-table">
+                        <thead><tr><th>Repuesto</th><th>S/N Malo</th><th>S/N Nuevo</th><th>Fecha de Instalación</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody>`;
+            
+            items.forEach(rep => {
+                const instalada = rep.fechaInstalacion && rep.fechaInstalacion !== "---" && rep.fechaInstalacion !== "";
+                const clase = instalada ? 'inst' : 'pend';
+                htmlBloque += `
+                    <tr>
+                        <td>${rep.repuesto}</td>
+                        <td>${rep.snMalo || '---'}</td>
+                        <td>${rep.snNuevo || '---'}</td>
+                        <td>${formatearFechaLatina(rep.fechaInstalacion)}</td>
+                        <td><span class="status-badge ${clase}">${instalada ? 'INSTALADO' : 'PENDIENTE'}</span></td>
+                        <td class="action-btns">
+                            <button class="btn-sm btn-edit" onclick="editarRegistro(${rep.id})">Editar</button>
+                            <button class="btn-sm btn-delete" onclick="eliminarRegistro(${rep.id})">Borrar</button>
+                        </td>
+                    </tr>`;
+            });
+            htmlBloque += `</tbody></table></div>`;
+            contenedor.innerHTML += htmlBloque;
+        });
+    }
+
+    function procesarFormulario() {
+        const idEditando = document.getElementById('editandoId').value;
+        idEditando === "" ? agregarRegistros() : actualizarRegistro(idEditando);
+    }
+
+    function agregarRegistros() {
+        const marca = document.getElementById('marca').value;
+        const repuesto = document.getElementById('repuesto').value;
+        const snEquipo = document.getElementById('snEquipo').value;
+        const fechaPeticion = document.getElementById('fechaPeticion').value;
+        if(!marca || !repuesto || !snEquipo || !fechaPeticion) return alert("Completa los campos obligatorios.");
+        const malasSeries = document.querySelectorAll('.sn-malo-input');
+        const nuevasSeries = document.querySelectorAll('.sn-nuevo-input');
+        malasSeries.forEach((inputMalo, index) => {
+            registros.push({
+                id: Date.now() + index,
+                marca,
+                modelo: document.getElementById('modelo').value,
+                snEquipo,
+                repuesto,
+                fechaPeticion,
+                fechaInstalacion: document.getElementById('fechaInstalacion').value,
+                snMalo: inputMalo.value,
+                snNuevo: nuevasSeries[index].value
+            });
+        });
+        finalizarAccion();
+    }
+
+    function finalizarAccion() {
+        localStorage.setItem('garantias_vFinal_FullNames', JSON.stringify(registros));
+        renderizarTabla();
+        document.getElementById('editandoId').value = "";
+        ['marca','modelo','snEquipo','repuesto','fechaPeticion','fechaInstalacion'].forEach(i => document.getElementById(i).value='');
+        document.getElementById('cantidad').value = 1;
+        document.getElementById('cantidad').disabled = false;
+        document.getElementById('btnGuardar').innerText = "💾 Guardar Registro";
+        generarInputsSerie();
+    }
+
+    function crearRecordatorio(llave) {
+        const items = registros.filter(r => `${r.snEquipo}_${r.fechaPeticion}` === llave && !r.fechaInstalacion);
+        if(items.length === 0) return;
+        const r = items[0];
+        const lista = items.map(i => `- ${i.repuesto}`).join('\n');
+        const titulo = encodeURIComponent(`Garantía: ${r.marca} ${r.modelo}`);
+        const detalles = encodeURIComponent(`S/N Equipo: ${r.snEquipo}\nRepuestos:\n${lista}`);
+        const f = new Date(); f.setDate(f.getDate() + 1);
+        const start = `${f.getFullYear()}${String(f.getMonth()+1).padStart(2,'0')}${String(f.getDate()).padStart(2,'0')}T090000`;
+        window.open(`https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&details=${detalles}&dates=${start}/${start}`, '_blank');
+    }
+
+    function editarRegistro(id) {
+        const reg = registros.find(r => r.id === id);
+        document.getElementById('editandoId').value = reg.id;
+        document.getElementById('marca').value = reg.marca;
+        document.getElementById('modelo').value = reg.modelo;
+        document.getElementById('snEquipo').value = reg.snEquipo;
+        document.getElementById('repuesto').value = reg.repuesto;
+        document.getElementById('fechaPeticion').value = reg.fechaPeticion;
+        document.getElementById('fechaInstalacion').value = reg.fechaInstalacion;
+        document.getElementById('cantidad').value = 1;
+        document.getElementById('cantidad').disabled = true;
+        generarInputsSerie();
+        document.querySelector('.sn-malo-input').value = reg.snMalo;
+        document.querySelector('.sn-nuevo-input').value = reg.snNuevo;
+        document.getElementById('btnGuardar').innerText = "🔄 Actualizar Datos";
+        window.scrollTo(0,0);
+    }
+
+    function actualizarRegistro(id) {
+        const idx = registros.findIndex(r => r.id == id);
+        registros[idx] = {...registros[idx], 
+            marca: document.getElementById('marca').value,
+            modelo: document.getElementById('modelo').value,
+            snEquipo: document.getElementById('snEquipo').value,
+            repuesto: document.getElementById('repuesto').value,
+            fechaPeticion: document.getElementById('fechaPeticion').value,
+            fechaInstalacion: document.getElementById('fechaInstalacion').value,
+            snMalo: document.querySelector('.sn-malo-input').value,
+            snNuevo: document.querySelector('.sn-nuevo-input').value
+        };
+        finalizarAccion();
+    }
+
+    function eliminarRegistro(id) { if(confirm("¿Borrar?")) { registros = registros.filter(r => r.id !== id); finalizarAccion(); } }
+
+    function exportarExcel() {
+        let csv = "\uFEFFMarca,Modelo,S/N Equipo,Repuesto,S/N Malo,Fecha Peticion,Fecha Instalacion,S/N Nuevo\n";
+        registros.forEach(r => csv += `"${r.marca}","${r.modelo}","${r.snEquipo}","${r.repuesto}","${r.snMalo}","${formatearFechaLatina(r.fechaPeticion)}","${formatearFechaLatina(r.fechaInstalacion)}","${r.snNuevo}"\n`);
+        const link = document.createElement("a"); link.href = encodeURI("data:text/csv;charset=utf-8," + csv); link.download = "garantias.csv"; link.click();
+    }
+
+    function importarExcel(event) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const lineas = e.target.result.split(/\r?\n/).slice(1);
+            lineas.forEach(l => {
+                if(!l.trim()) return;
+                const c = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
+                if(c.length >= 7) registros.push({id: Date.now()+Math.random(), marca:c[0], modelo:c[1], snEquipo:c[2], repuesto:c[3], snMalo:c[4], fechaPeticion:c[5], fechaInstalacion:c[6], snNuevo:c[7]});
+            });
+            finalizarAccion();
+        };
+        reader.readAsText(event.target.files[0]);
+    }
+
+    generarInputsSerie();
+    renderizarTabla();
+</script>
+</body>
+</html>
