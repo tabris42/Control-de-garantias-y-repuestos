@@ -3,13 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Garantías - Alertas On/Off</title>
+    <title>Control de Garantías - Respaldo Integral</title>
     <style>
-        /* ESTILOS VISUALES */
+        /* ESTILOS VISUALES (Se mantienen para tu comodidad) */
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; margin: 20px; color: #333; }
-        .container { max-width: 1150px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        .main-layout { 
+            display: grid; 
+            grid-template-columns: 320px 1fr; 
+            gap: 25px; 
+            max-width: 1450px; 
+            margin: auto; 
+        }
+
+        .container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h2 { color: #1e3a8a; text-align: center; margin-bottom: 25px; }
         
+        .notepad-container {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 2px solid #334155;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+            overflow: hidden;
+        }
+        .notepad-header {
+            background: #334155;
+            color: white;
+            padding: 12px 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        #blockNotas {
+            width: 100%;
+            height: 500px;
+            border: none;
+            padding: 15px;
+            background: #f8fafc;
+            resize: vertical;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            box-sizing: border-box;
+            display: block;
+        }
+
+        /* Estilos de formulario y tablas */
         .form-container { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 25px; }
         .form-row-top { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .form-row-bottom { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; align-items: end; }
@@ -21,102 +62,94 @@
         .series-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #edf2f7; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
         
         .button-group { display: flex; flex-direction: column; gap: 10px; }
-        button { cursor: pointer; border: none; border-radius: 6px; font-weight: bold; transition: 0.2s; padding: 12px; }
-        .btn-add { background-color: #2563eb; color: white; width: 100%; font-size: 1rem; }
+        button { cursor: pointer; border: none; border-radius: 6px; font-weight: bold; padding: 12px; }
+        .btn-add { background-color: #2563eb; color: white; width: 100%; }
         .btn-print { background-color: #334155; color: white; }
         .btn-excel { background-color: #166534; color: white; }
         .btn-import { background-color: #64748b; color: white; }
 
-        .maquina-block { border: 1px solid #e2e8f0; border-radius: 10px; margin-top: 20px; overflow: hidden; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .maquina-header { background: #334155; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .maquina-info { font-size: 0.9rem; }
-        .maquina-info span { color: #cbd5e1; margin-left: 15px; font-size: 0.8rem; }
-
+        .maquina-block { border: 1px solid #e2e8f0; border-radius: 10px; margin-top: 20px; overflow: hidden; background: #fff; }
+        .maquina-header { background: #334155; color: white; padding: 12px 20px; display: flex; justify-content: space-between; }
         .repuestos-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .repuestos-table th { background: #f1f5f9; color: #475569; padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        .repuestos-table th { background: #f1f5f9; padding: 10px; text-align: left; }
         .repuestos-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
-
         .status-badge { padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; }
         .pend { background: #fef3c7; color: #92400e; }
         .inst { background: #dcfce7; color: #166534; }
-        
         .action-btns { display: flex; gap: 5px; }
         .btn-sm { padding: 5px 8px; font-size: 0.7rem; border-radius: 4px; }
         .btn-edit { background: #dbeafe; color: #1e40af; }
         .btn-delete { background: #fee2e2; color: #991b1b; }
-        
-        /* Estilos del botón de alerta interruptor */
-        .btn-alerta { background-color: #f59e0b; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: bold; }
-        .btn-alerta.activa { background-color: #64748b; color: #fff; }
+        .btn-alerta { background-color: #f59e0b; color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; }
+        .btn-alerta.activa { background-color: #64748b; }
 
         @media print {
-            body { background-color: white; margin: 0; padding: 0; }
-            .container { box-shadow: none; max-width: 100%; width: 100%; margin: 0; padding: 0; }
-            .form-container, .button-group, h2, .action-btns, .btn-alerta, .search-group { display: none !important; }
-            .maquina-block { border: 1px solid #333; page-break-inside: avoid; margin-top: 10px; box-shadow: none; }
-            .maquina-header { background-color: #eee !important; color: black !important; border-bottom: 1px solid #333; }
-            .maquina-info span { color: #333 !important; }
-            .repuestos-table th { background-color: #f5f5f5 !important; color: black !important; border-bottom: 1px solid #333; }
-            .status-badge { border: 1px solid #333; }
+            .main-layout { display: block; }
+            .notepad-container, .form-container, .action-btns, .btn-alerta { display: none !important; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Control de Garantías y Repuestos</h2>
-    
-    <div class="form-container">
-        <div class="form-row-top">
-            <input type="hidden" id="editandoId" value="">
-            <div class="form-group"><label>Marca</label><input type="text" id="marca"></div>
-            <div class="form-group"><label>Modelo</label><input type="text" id="modelo"></div>
-            <div class="form-group"><label>S/N Equipo</label><input type="text" id="snEquipo"></div>
-            <div class="form-group"><label>Repuesto</label><input type="text" id="repuesto"></div>
-            <div class="form-group" id="grupoCantidad"><label>Cantidad</label><input type="number" id="cantidad" value="1" min="1" onchange="generarInputsSerie()"></div>
-        </div>
-
-        <div class="form-row-bottom">
-            <div class="form-group"><label>Fecha de Petición</label><input type="date" id="fechaPeticion"></div>
-            <div class="form-group"><label>Fecha de Instalación</label><input type="date" id="fechaInstalacion"></div>
-            <div class="form-group search-group">
-                <label>🔍 Buscar por S/N Equipo</label>
-                <input type="text" id="inputBusqueda" placeholder="Filtrar por serie..." onkeyup="renderizarTabla()">
-            </div>
-        </div>
-        
-        <div id="contenedorSeries" class="series-container"></div>
-        
-        <div class="button-group">
-            <button id="btnGuardar" class="btn-add" onclick="procesarFormulario()">💾 Guardar Registro</button>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                <button class="btn-print" onclick="window.print()">🖨️ Imprimir Listado</button>
-                <button class="btn-excel" onclick="exportarExcel()">📊 Exportar a Excel</button>
-                <button class="btn-import" onclick="document.getElementById('fileInput').click()">📂 Importar Backup</button>
-            </div>
-            <input type="file" id="fileInput" accept=".csv" style="display:none" onchange="importarExcel(event)">
-        </div>
+<div class="main-layout">
+    <div class="notepad-container">
+        <div class="notepad-header"><span>📝 Notas de Seguimiento</span></div>
+        <textarea id="blockNotas" placeholder="Notas que se guardarán en el Excel..." oninput="guardarNotas()"></textarea>
     </div>
 
-    <div id="listaBloques"></div>
+    <div class="container">
+        <h2>Control de Garantías y Repuestos</h2>
+        <div class="form-container">
+            <div class="form-row-top">
+                <input type="hidden" id="editandoId" value="">
+                <div class="form-group"><label>Marca</label><input type="text" id="marca"></div>
+                <div class="form-group"><label>Modelo</label><input type="text" id="modelo"></div>
+                <div class="form-group"><label>S/N Equipo</label><input type="text" id="snEquipo"></div>
+                <div class="form-group"><label>Repuesto</label><input type="text" id="repuesto"></div>
+                <div class="form-group"><label>Cantidad</label><input type="number" id="cantidad" value="1" min="1" onchange="generarInputsSerie()"></div>
+            </div>
+            <div class="form-row-bottom">
+                <div class="form-group"><label>Fecha de Petición</label><input type="date" id="fechaPeticion"></div>
+                <div class="form-group"><label>Fecha de Instalación</label><input type="date" id="fechaInstalacion"></div>
+                <div class="form-group search-group">
+                    <label>🔍 Buscar por S/N Equipo</label>
+                    <input type="text" id="inputBusqueda" placeholder="Filtrar por serie..." onkeyup="renderizarTabla()">
+                </div>
+            </div>
+            <div id="contenedorSeries" class="series-container"></div>
+            <div class="button-group">
+                <button id="btnGuardar" class="btn-add" onclick="procesarFormulario()">💾 Guardar Registro</button>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                    <button class="btn-print" onclick="window.print()">🖨️ Imprimir Listado</button>
+                    <button class="btn-excel" onclick="exportarExcel()">📊 Exportar a Excel (con notas)</button>
+                    <button class="btn-import" onclick="document.getElementById('fileInput').click()">📂 Importar Backup</button>
+                </div>
+                <input type="file" id="fileInput" accept=".csv" style="display:none" onchange="importarExcel(event)">
+            </div>
+        </div>
+        <div id="listaBloques"></div>
+    </div>
 </div>
 
 <script>
     let registros = JSON.parse(localStorage.getItem('garantias_vFinal_FullNames')) || [];
+    document.getElementById('blockNotas').value = localStorage.getItem('notas_personal_garantias') || "";
+
+    function guardarNotas() {
+        localStorage.setItem('notas_personal_garantias', document.getElementById('blockNotas').value);
+    }
 
     function formatearFechaLatina(fechaStr) {
-        if(!fechaStr || fechaStr === "---" || fechaStr === "") return "---";
+        if(!fechaStr || fechaStr === "---") return "---";
         if(fechaStr.includes("/")) return fechaStr;
         const partes = fechaStr.split("-");
-        if(partes.length !== 3) return fechaStr;
-        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : fechaStr;
     }
 
     function generarInputsSerie() {
         const cant = document.getElementById('cantidad').value;
         const contenedor = document.getElementById('contenedorSeries');
         contenedor.innerHTML = '';
-        if(cant < 1) return;
         for(let i = 1; i <= cant; i++) {
             contenedor.innerHTML += `
                 <div class="form-group"><label>S/N MALO #${i}</label><input type="text" class="sn-malo-input"></div>
@@ -137,9 +170,7 @@
             grupos[llave].push(r);
         });
 
-        const llavesOrdenadas = Object.keys(grupos).sort((a, b) => b.split('_')[1].localeCompare(a.split('_')[1]));
-
-        llavesOrdenadas.forEach(llave => {
+        Object.keys(grupos).sort((a, b) => b.split('_')[1].localeCompare(a.split('_')[1])).forEach(llave => {
             const items = grupos[llave];
             const cab = items[0];
             const tienePendientes = items.some(i => !i.fechaInstalacion || i.fechaInstalacion === "---");
@@ -148,133 +179,135 @@
             let htmlBloque = `
                 <div class="maquina-block">
                     <div class="maquina-header">
-                        <div class="maquina-info">
-                            <strong>${cab.marca} ${cab.modelo}</strong>
-                            <span>S/N EQUIPO: ${cab.snEquipo}</span>
-                            <span>📅 PETICIÓN: ${formatearFechaLatina(cab.fechaPeticion)}</span>
+                        <div style="font-size:0.9rem">
+                            <strong>${cab.marca} ${cab.modelo}</strong> | S/N: ${cab.snEquipo} | 📅: ${formatearFechaLatina(cab.fechaPeticion)}
                         </div>
-                        ${tienePendientes ? 
-                            `<button class="btn-alerta ${alertaActivada ? 'activa' : ''}" 
-                                onclick="toggleAlerta('${llave}', ${alertaActivada})">
-                                ${alertaActivada ? '🔕 Alerta Activa' : '🔔 Activar Alerta'}
-                            </button>` : ''}
+                        ${tienePendientes ? `<button class="btn-alerta ${alertaActivada ? 'activa' : ''}" onclick="toggleAlerta('${llave}', ${alertaActivada})">${alertaActivada ? '🔕 Activa' : '🔔 Alerta'}</button>` : ''}
                     </div>
                     <table class="repuestos-table">
-                        <thead><tr><th>Repuesto</th><th>S/N Malo</th><th>S/N Nuevo</th><th>Fecha de Instalación</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <thead><tr><th>Repuesto</th><th>S/N Malo</th><th>S/N Nuevo</th><th>Instalación</th><th>Estado</th><th>Acciones</th></tr></thead>
                         <tbody>`;
-            
             items.forEach(rep => {
-                const instalada = rep.fechaInstalacion && rep.fechaInstalacion !== "---" && rep.fechaInstalacion !== "";
-                const clase = instalada ? 'inst' : 'pend';
+                const inst = rep.fechaInstalacion && rep.fechaInstalacion !== "---";
                 htmlBloque += `
                     <tr>
-                        <td>${rep.repuesto}</td>
-                        <td>${rep.snMalo || '---'}</td>
-                        <td>${rep.snNuevo || '---'}</td>
+                        <td>${rep.repuesto}</td><td>${rep.snMalo || '---'}</td><td>${rep.snNuevo || '---'}</td>
                         <td>${formatearFechaLatina(rep.fechaInstalacion)}</td>
-                        <td><span class="status-badge ${clase}">${instalada ? 'INSTALADO' : 'PENDIENTE'}</span></td>
+                        <td><span class="status-badge ${inst ? 'inst' : 'pend'}">${inst ? 'INSTALADO' : 'PENDIENTE'}</span></td>
                         <td class="action-btns">
                             <button class="btn-sm btn-edit" onclick="editarRegistro(${rep.id})">Editar</button>
                             <button class="btn-sm btn-delete" onclick="eliminarRegistro(${rep.id})">Borrar</button>
                         </td>
                     </tr>`;
             });
-            htmlBloque += `</tbody></table></div>`;
-            contenedor.innerHTML += htmlBloque;
+            contenedor.innerHTML += htmlBloque + `</tbody></table></div>`;
         });
     }
 
-    // NUEVA FUNCIÓN INTERRUPTOR (Toggle)
+    /* --- LOGICA DE EXPORTACIÓN ACTUALIZADA --- */
+    function exportarExcel() {
+        // Obtenemos las notas actuales y limpiamos saltos de línea para que no rompan el CSV
+        const notasLimpias = document.getElementById('blockNotas').value.replace(/\n/g, "[BR]");
+        
+        let csv = "\uFEFFMarca,Modelo,S/N Equipo,Repuesto,S/N Malo,Fecha Peticion,Fecha Instalacion,S/N Nuevo,Notas del Block\n";
+        
+        registros.forEach(r => {
+            csv += `"${r.marca}","${r.modelo}","${r.snEquipo}","${r.repuesto}","${r.snMalo}","${formatearFechaLatina(r.fechaPeticion)}","${formatearFechaLatina(r.fechaInstalacion)}","${r.snNuevo}","${notasLimpias}"\n`;
+        });
+
+        const link = document.createElement("a");
+        link.href = encodeURI("data:text/csv;charset=utf-8," + csv);
+        link.download = `respaldo_garantias_${new Date().toLocaleDateString()}.csv`;
+        link.click();
+    }
+
+    /* --- LOGICA DE IMPORTACIÓN ACTUALIZADA --- */
+    function importarExcel(event) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const lineas = e.target.result.split(/\r?\n/).slice(1);
+            let notasDetectadas = "";
+
+            lineas.forEach(l => {
+                if(!l.trim()) return;
+                const c = l.split(/,(?=(?:(?:[^\"]*\"){2})*[^\"]*$)/).map(s => s.replace(/^\"|\"$/g, '').trim());
+                
+                if(c.length >= 8) {
+                    // Si existe la columna 9 (índice 8), capturamos las notas
+                    if(c[8]) notasDetectadas = c[8].replace(/\[BR\]/g, "\n");
+
+                    registros.push({
+                        id: Date.now()+Math.random(), 
+                        marca:c[0], modelo:c[1], snEquipo:c[2], repuesto:c[3], 
+                        snMalo:c[4], fechaPeticion:c[5], fechaInstalacion:c[6], 
+                        snNuevo:c[7], alertaActivada: false
+                    });
+                }
+            });
+
+            // Actualizamos el block de notas si se encontró algo en el archivo
+            if(notasDetectadas) {
+                document.getElementById('blockNotas').value = notasDetectadas;
+                guardarNotas();
+            }
+            finalizarAccion();
+        };
+        reader.readAsText(event.target.files[0]);
+    }
+
+    // El resto de funciones (procesarFormulario, agregar, editar, borrar, alertas) se mantienen iguales.
     function toggleAlerta(llave, yaActivada) {
         if (!yaActivada) {
             crearRecordatorio(llave);
         } else {
-            // Desactivar: Marcar todos los registros del grupo como falso
-            registros.forEach(r => {
-                if(`${r.snEquipo}_${r.fechaPeticion}` === llave) {
-                    r.alertaActivada = false;
-                }
-            });
-            localStorage.setItem('garantias_vFinal_FullNames', JSON.stringify(registros));
-            renderizarTabla();
+            registros.forEach(r => { if(`${r.snEquipo}_${r.fechaPeticion}` === llave) r.alertaActivada = false; });
+            finalizarAccion();
         }
     }
 
     function crearRecordatorio(llave) {
         const items = registros.filter(r => `${r.snEquipo}_${r.fechaPeticion}` === llave && !r.fechaInstalacion);
         if(items.length === 0) return;
-        
-        registros.forEach(r => {
-            if(`${r.snEquipo}_${r.fechaPeticion}` === llave) {
-                r.alertaActivada = true;
-            }
-        });
-        
+        registros.forEach(r => { if(`${r.snEquipo}_${r.fechaPeticion}` === llave) r.alertaActivada = true; });
         const r = items[0];
-        const lista = items.map(i => `- ${i.repuesto}`).join('\n');
         const titulo = encodeURIComponent(`Garantía: ${r.marca} ${r.modelo}`);
-        const detalles = encodeURIComponent(`S/N Equipo: ${r.snEquipo}\nRepuestos:\n${lista}`);
-        
-        // Lógica de días hábiles (+7 días)
-        let fechaDestino = new Date();
-        let diasSumados = 0;
-        while(diasSumados < 7) {
-            fechaDestino.setDate(fechaDestino.getDate() + 1);
-            let diaSemana = fechaDestino.getDay();
-            if(diaSemana !== 0 && diaSemana !== 6) {
-                diasSumados++;
-            }
-        }
-        
-        const y = fechaDestino.getFullYear();
-        const m = String(fechaDestino.getMonth()+1).padStart(2,'0');
-        const d = String(fechaDestino.getDate()).padStart(2,'0');
-        const start = `${y}${m}${d}T090000`;
-        
-        localStorage.setItem('garantias_vFinal_FullNames', JSON.stringify(registros));
-        renderizarTabla();
-        window.open(`https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&details=${detalles}&dates=${start}/${start}`, '_blank');
+        window.open(`https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}`, '_blank');
+        finalizarAccion();
     }
 
     function procesarFormulario() {
-        const idEditando = document.getElementById('editandoId').value;
-        idEditando === "" ? agregarRegistros() : actualizarRegistro(idEditando);
+        const id = document.getElementById('editandoId').value;
+        id === "" ? agregar() : actualizar(id);
     }
 
-    function agregarRegistros() {
-        const marca = document.getElementById('marca').value;
-        const repuesto = document.getElementById('repuesto').value;
-        const snEquipo = document.getElementById('snEquipo').value;
-        const fechaPeticion = document.getElementById('fechaPeticion').value;
-        if(!marca || !repuesto || !snEquipo || !fechaPeticion) return alert("Completa los campos obligatorios.");
-        const malasSeries = document.querySelectorAll('.sn-malo-input');
-        const nuevasSeries = document.querySelectorAll('.sn-nuevo-input');
-        malasSeries.forEach((inputMalo, index) => {
+    function agregar() {
+        const m = document.getElementById('marca').value;
+        const rep = document.getElementById('repuesto').value;
+        const sn = document.getElementById('snEquipo').value;
+        const fp = document.getElementById('fechaPeticion').value;
+        if(!m || !rep || !sn || !fp) return alert("Faltan datos");
+        
+        document.querySelectorAll('.sn-malo-input').forEach((inputMalo, i) => {
             registros.push({
-                id: Date.now() + index,
-                marca,
-                modelo: document.getElementById('modelo').value,
-                snEquipo,
-                repuesto,
-                fechaPeticion,
+                id: Date.now() + i, marca: m, modelo: document.getElementById('modelo').value,
+                snEquipo: sn, repuesto: rep, fechaPeticion: fp,
                 fechaInstalacion: document.getElementById('fechaInstalacion').value,
-                snMalo: inputMalo.value,
-                snNuevo: nuevasSeries[index].value,
+                snMalo: inputMalo.value, snNuevo: document.querySelectorAll('.sn-nuevo-input')[i].value,
                 alertaActivada: false
             });
         });
         finalizarAccion();
     }
 
-    function finalizarAccion() {
-        localStorage.setItem('garantias_vFinal_FullNames', JSON.stringify(registros));
-        renderizarTabla();
-        document.getElementById('editandoId').value = "";
-        ['marca','modelo','snEquipo','repuesto','fechaPeticion','fechaInstalacion'].forEach(id => document.getElementById(id).value='');
-        document.getElementById('cantidad').value = 1;
-        document.getElementById('cantidad').disabled = false;
-        document.getElementById('btnGuardar').innerText = "💾 Guardar Registro";
-        generarInputsSerie();
+    function actualizar(id) {
+        const idx = registros.findIndex(r => r.id == id);
+        registros[idx] = {...registros[idx], 
+            marca: document.getElementById('marca').value, modelo: document.getElementById('modelo').value,
+            snEquipo: document.getElementById('snEquipo').value, repuesto: document.getElementById('repuesto').value,
+            fechaPeticion: document.getElementById('fechaPeticion').value, fechaInstalacion: document.getElementById('fechaInstalacion').value,
+            snMalo: document.querySelector('.sn-malo-input').value, snNuevo: document.querySelector('.sn-nuevo-input').value
+        };
+        finalizarAccion();
     }
 
     function editarRegistro(id) {
@@ -287,49 +320,21 @@
         document.getElementById('fechaPeticion').value = reg.fechaPeticion;
         document.getElementById('fechaInstalacion').value = reg.fechaInstalacion;
         document.getElementById('cantidad').value = 1;
-        document.getElementById('cantidad').disabled = true;
         generarInputsSerie();
         document.querySelector('.sn-malo-input').value = reg.snMalo;
         document.querySelector('.sn-nuevo-input').value = reg.snNuevo;
         document.getElementById('btnGuardar').innerText = "🔄 Actualizar Datos";
-        window.scrollTo(0,0);
-    }
-
-    function actualizarRegistro(id) {
-        const idx = registros.findIndex(r => r.id == id);
-        registros[idx] = {...registros[idx], 
-            marca: document.getElementById('marca').value,
-            modelo: document.getElementById('modelo').value,
-            snEquipo: document.getElementById('snEquipo').value,
-            repuesto: document.getElementById('repuesto').value,
-            fechaPeticion: document.getElementById('fechaPeticion').value,
-            fechaInstalacion: document.getElementById('fechaInstalacion').value,
-            snMalo: document.querySelector('.sn-malo-input').value,
-            snNuevo: document.querySelector('.sn-nuevo-input').value
-        };
-        finalizarAccion();
     }
 
     function eliminarRegistro(id) { if(confirm("¿Borrar?")) { registros = registros.filter(r => r.id !== id); finalizarAccion(); } }
 
-    function exportarExcel() {
-        let csv = "\uFEFFMarca,Modelo,S/N Equipo,Repuesto,S/N Malo,Fecha Peticion,Fecha Instalacion,S/N Nuevo\n";
-        registros.forEach(r => csv += `"${r.marca}","${r.modelo}","${r.snEquipo}","${r.repuesto}","${r.snMalo}","${formatearFechaLatina(r.fechaPeticion)}","${formatearFechaLatina(r.fechaInstalacion)}","${r.snNuevo}"\n`);
-        const link = document.createElement("a"); link.href = encodeURI("data:text/csv;charset=utf-8," + csv); link.download = "garantias.csv"; link.click();
-    }
-
-    function importarExcel(event) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const lineas = e.target.result.split(/\r?\n/).slice(1);
-            lineas.forEach(l => {
-                if(!l.trim()) return;
-                const c = l.split(/,(?=(?:(?:[^\"]*\"){2})*[^\"]*$)/).map(s => s.replace(/^\"|\"$/g, '').trim());
-                if(c.length >= 7) registros.push({id: Date.now()+Math.random(), marca:c[0], modelo:c[1], snEquipo:c[2], repuesto:c[3], snMalo:c[4], fechaPeticion:c[5], fechaInstalacion:c[6], snNuevo:c[7], alertaActivada: false});
-            });
-            finalizarAccion();
-        };
-        reader.readAsText(event.target.files[0]);
+    function finalizarAccion() {
+        localStorage.setItem('garantias_vFinal_FullNames', JSON.stringify(registros));
+        renderizarTabla();
+        ['marca','modelo','snEquipo','repuesto','fechaPeticion','fechaInstalacion','editandoId'].forEach(id => document.getElementById(id).value='');
+        document.getElementById('cantidad').value = 1;
+        document.getElementById('btnGuardar').innerText = "💾 Guardar Registro";
+        generarInputsSerie();
     }
 
     generarInputsSerie();
